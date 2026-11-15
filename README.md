@@ -169,3 +169,32 @@ hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart ke
    lonjakan interval hingga 130.43 ms. GPU grafis proses shell sekitar 5.1–11.6% pada skenario aktif.
    Optimasi tile belum diperlukan berdasarkan pengukuran ini; sumber lonjakan launcher/dashboard
    belum diisolasi. Probe profiling tetap di luar repo dan tidak dimuat oleh shell produksi.
+
+
+7. Modernisasi Rofi Wallpaper Picker (Super+W) & Menu Kaca macOS (2026-11-15).
+   Pemilih wallpaper Super+W ternyata dipanggil lewat Rofi (`wppicker.sh`), terpisah dari shell utama.
+   Tampilannya dimodernisasi mengikuti estetika liquid glass macOS:
+
+   - Layer blur Hyprland: ditambahkan aturan `namespace = "rofi"` dengan `blur = true`, `ignore_alpha = 0.2`,
+     dan animasi `popin 90%` di `~/.config/hypr/hyprland/rules.lua`.
+   - Warna kaca: `~/.local/bin/sync-caelestia-rofi.py` secara otomatis mengekspor variabel `glass`
+     (surface transparan), `glass-card`, dan `glass-hi` ke `colors.rasi` setiap kali skema diperbarui.
+   - Thumbnail squircle presisi: `wppicker.sh` menghasilkan cache thumbnail 480x480 dengan sudut melengkung
+     halus lewat ffmpeg, mengisi penuh kartu 240px tanpa menyisakan ruang kosong di atas/bawah. Nama wallpaper
+     ditampilkan rapi tanpa ekstensi dan path folder.
+   - Layout Spotlight: bilah pencarian berbentuk kapsul (pill) diposisikan di atas grid (`children: [ "inputbar", "listview" ]`),
+     kartu wallpaper memakai border putih tipis lembut `rgba(255, 255, 255, 10%)`, dan kartu terpilih disorot
+     dengan `glass-hi` serta garis aksen `@primary`.
+   - Dialog kategori (`caelestia-menu.rasi`): menu kategori ringkas 440px berlatar kaca dan border melengkung 32px.
+
+   Visual: `screenshots/15-rofi-grid.png` (grid wallpaper kaca) dan `screenshots/16-rofi-category.png` (dialog kategori).
+
+
+8. Penyempurnaan Shell QML fork & SDDM (`31463924` pada fork).
+   - Launcher & Nexus: `WallpaperItem.qml`, `WallItem.qml`, `WallpaperSelect.qml`, dan `WallpaperCategory.qml`
+     diselaraskan dengan border seleksi kaca, indikator centang dinamis, penyesuaian kolom grid responsif,
+     dan nama berkas yang bersih.
+   - Lockscreen: `modules/lock/` (`LockSurface.qml`, `Center.qml`, `Clock.qml`, `PasswordInput.qml`, `ProfilePic.qml`)
+     disempurnakan dengan penataan kartu kaca transparan, jam berbobot bersih, dan label pengguna yang rapi.
+   - SDDM Login Theme: `sddm/Main.qml` menyelaraskan blur latar belakang dan kartu login dengan gaya Caelestia.
+
