@@ -93,6 +93,20 @@ The new render tests reproduce the missing bottom glow, corner highlights, and r
 
 New documentation previews show the actual bar/frame, OSD, and utilities on an isolated workspace with a demonstration image viewer. Notifications were suppressed temporarily, and the original workspace and notification setting were restored after capture. The earlier performance measurements predate this lighting update; performance has not been measured again.
 
+## Material roles, light/dark appearance, and depth
+
+The material treatment follows the applicable hierarchy and legibility guidance in Apple's [Materials HIG](https://developer.apple.com/design/human-interface-guidelines/materials) and the visual principles in [Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/). This is a Qt/Hyprland approximation using compositor blur and SDF lighting; it does not implement Apple's native backdrop lensing or vibrancy engine.
+
+Connected functional surfaces use a regular tint of 0.7 so text remains legible over bright and dark content. They share one material through their joins. Existing content cards retain their standard materials. The lower-tint shader path remains available for thin glass. Turning transparency off disables both glass variants and restores opaque toast backgrounds, borders, and the existing elevation treatment.
+
+The active-window label and clock use the semantic surface foreground while glass is enabled. Toasts use neutral glass and surface text colors; success, warning, and error indicators retain their colored icon badges. Secondary toast text uses 0.9 opacity to preserve contrast on white.
+
+Cast shadows retain their existing 15 px reach and base strength, but follow an upper-left light source instead of forming a uniform halo. Dark glass frames suppress the inner cast shadow; light frames retain a faint directional contact shadow to remain distinguishable over white. Toast contact shadows are slightly stronger in the light appearance. Rim and local highlights remain separate from cast shadows.
+
+Validation covers the actual light and dark theme settings over white and dark backgrounds, all four toast types, and the opaque fallback when transparency is disabled. Measured title contrast across the toast matrix was at least 5.65:1, with secondary text at least 4.94:1. Render tests cover regular-material contrast, material joins, directional shadows, bounded light-frame contact shadows, and disabled glass. The complete suite reports 38 PASS results, including setup and cleanup, with no failures. Qt Wayland text-input focus warnings still appear between test windows.
+
+See the [light-on-white frame check](images/light-white-frame.png) and the reviewed light/dark previews in the [README](../README.md#preview). The original theme, transparency setting, notification setting, and workspace are restored after checks. Performance measurements earlier in this log predate these material changes and were not repeated.
+
 ## Public assets and privacy
 
 Local desktop captures were removed from the project and its rewritten Git history because they exposed private notifications and application content. The screenshot directory is ignored. Any future showcase images must be reviewed in full, including backgrounds visible through transparent surfaces.

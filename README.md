@@ -36,13 +36,14 @@ The development environment used Hyprland 0.57, Qt 6.12, CMake, Ninja, a C++ com
 
 ## Preview
 
-All previews were captured on an isolated workspace with notifications suppressed and a controlled artwork background. Shell previews show the updated glass material over a demonstration image viewer; Rofi previews use demonstration entries. No private notifications, account panels, or application content are shown.
+All shell previews were captured on an isolated workspace with a controlled artwork background and notifications suppressed. Light and dark appearances were switched through the actual theme settings. Popup previews use a safe demonstration message; Rofi previews use demonstration entries. No private notifications, account panels, or application windows are shown.
 
-![Shell frame and bar with a demonstration background](docs/images/shell-desktop-preview.png)
-
-| OSD | Utilities |
+| Light appearance | Dark appearance |
 | --- | --- |
-| ![Glass OSD](docs/images/shell-osd-preview.png) | ![Glass utilities panel](docs/images/shell-utilities-preview.png) |
+| ![Light shell frame and bar](docs/images/shell-desktop-preview-light.png) | ![Dark shell frame and bar](docs/images/shell-desktop-preview.png) |
+| ![Light glass OSD](docs/images/shell-osd-preview-light.png) | ![Dark glass OSD](docs/images/shell-osd-preview.png) |
+| ![Light utilities panel](docs/images/shell-utilities-preview-light.png) | ![Dark utilities panel](docs/images/shell-utilities-preview.png) |
+| ![Light system toast](docs/images/system-toast-preview-light.png) | ![Dark system toast](docs/images/system-toast-preview.png) |
 
 ![Wallpaper picker theme with demonstration entries](docs/images/wallpaper-preview.png)
 
@@ -51,6 +52,9 @@ All previews were captured on an isolated workspace with notifications suppresse
 ## Implementation and validation
 
 - A unified renderer avoids overlapping tint and gaps where glass panels meet.
+- Text-bearing shell surfaces use a regular glass tint with semantic foreground colors in both light and dark appearances.
+- Cast shadows follow a consistent light direction. Light frames retain a faint contact shadow over white; dark frames avoid a surrounding dark halo.
+- System toasts share the glass renderer and preserve colored status badges. Disabling transparency restores the opaque presentation.
 - The shell fork includes render tests for shadows, frame edges, panel intersections, and popout transitions.
 - The Rofi picker uses rounded 480×480 thumbnails displayed in 240 px cards.
 - The SDDM file is an adapted main view, not a complete standalone SDDM theme.
