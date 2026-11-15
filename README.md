@@ -8,8 +8,8 @@ Bar, drawer, popup, dan panel Caelestia memakai bahasa visual yang sama dengan n
 
 - kaca tembus pandang: latar di belakangnya diburamkan oleh Hyprland (layer rule `blur` + `ignore_alpha`),
   di atasnya warna `surface` tipis (alpha sekitar 0.38)
-- tepi bercahaya: garis 1.2 px dengan gradien, paling terang di sudut, redup di tengah
-- kilau lembut di sudut bawah dan cahaya yang terkumpul di dasar kaca
+- tepi bercahaya: garis putih lembut 1.2 px mengikuti kontur dan arah cahaya
+- kilau halus memudar 20 px ke dalam kaca
 - bentuk menempel ke tepi layar dengan lekukan cekung (seperti notch MacBook)
 - gerak pegas saat melebar/menyusut
 - warna tetap dari skema Caelestia (ikut wallpaper)
@@ -38,10 +38,24 @@ Tepi dan kilau hanya bisa dibuat sekali untuk semua di shader itu, jadi dipilih 
   Belum ada fork di GitHub.
 - Build plugin: `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_MODULES=plugin`, lalu
   `cmake --build build`.
-- Jalankan fork untuk uji (cek dulu `qs -c caelestia ipc call lock isLocked` harus `false`, karena lockscreen
-  ada di dalam shell): `caelestia shell -k`, lalu `QML_IMPORT_PATH=~/.local/src/caelestia-shell/build/qml qs -p ~/.local/src/caelestia-shell -n`.
-- Kembali ke shell paket: `qs -p ~/.local/src/caelestia-shell kill`, lalu `caelestia shell -d`.
-- Belum dipasang permanen. `/etc`, `/usr`, `~/.config`, dan `execs.lua` tidak diubah.
+- Aktif permanen sejak 2026-11-15: `~/.config/quickshell/caelestia` adalah symlink ke fork.
+  Autostart di `~/.config/hypr/hyprland/execs.lua` menjalankan
+  `env QML_IMPORT_PATH=${HOME}/.local/src/caelestia-shell/build/qml caelestia shell -d`.
+- Cadangan autostart asli: `~/.local/state/caelestia-glass/backups/20261115-133303/execs.lua`.
+  Metadata aktivasi dan lokasi plugin tersimpan di `~/.local/state/caelestia-glass/activation.json`.
+- `/etc` dan `/usr` tetap memakai paket sistem; perubahan konfigurasi hanya pada user.
+
+Untuk restart manual, periksa `qs -c caelestia ipc call lock isLocked` terlebih dahulu. Lanjutkan hanya
+jika hasilnya `false`, karena lockscreen ada di dalam shell. Sertakan lokasi plugin hasil build:
+
+```sh
+QML_IMPORT_PATH="$HOME/.local/src/caelestia-shell/build/qml" caelestia shell -r -d
+```
+
+Untuk kembali ke shell paket: ketika sesi tidak terkunci, hentikan fork dengan `qs -c caelestia kill`,
+hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart kembali menjadi
+`caelestia shell -d`, lalu jalankan `caelestia shell -d`. Cadangan tersedia untuk membandingkan isi
+`execs.lua`; jangan menimpa perubahan lain yang dibuat setelah aktivasi.
 
 ## Progres
 
@@ -114,3 +128,44 @@ Tepi dan kilau hanya bisa dibuat sekali untuk semua di shader itu, jadi dipilih 
    `screenshots/09-glass-notification.png`. Shell paket sudah aktif kembali; autostart belum diubah.
    Fullscreen dan seluruh variasi popout belum diuji langsung. Editor Nexus terpisah, lockscreen,
    serta toast tetap memakai materialnya sendiri.
+
+
+5. Langkah 4: verifikasi fullscreen/popout dan aktivasi permanen (2026-11-15).
+   Jendela uji Qt 6 dipindahkan masuk/keluar fullscreen tanpa mengubah jendela pengguna.
+   Saat fullscreen, lima sampel tepi layar sama dengan warna jendela uji dan launcher tetap tertutup.
+   Setelah keluar, bingkai kembali dan launcher dapat dibuka lagi. Hasilnya tersimpan lokal di
+   `~/.local/state/caelestia-glass/validation-result.txt`.
+
+   Popout baterai dan jaringan diperiksa secara visual dan menampilkan kaca beserta tepinya.
+   Variasi lain, termasuk dialog sandi/tray bertingkat, belum diuji lengkap. Sempat ada warning
+   model notifikasi `null` saat popup ditutup pada sesi validasi; berkas notifikasi tidak diubah.
+
+   Symlink dan autostart sudah dipasang, lalu fork diluncurkan ulang lewat `caelestia shell -d`
+   dengan environment yang sama dengan autostart. Hanya satu instance berjalan melalui konfigurasi
+   user; kedua library Blobs yang dimuat berasal dari direktori build fork. Pemeriksaan sintaks Lua
+   dan `hyprctl configerrors` lulus. Log peluncuran aktif tidak memiliki error QML/load pada saat dicek.
+   Shell kaca dibiarkan aktif. Autostart berikutnya belum diuji dengan reboot/logout.
+
+
+6. Perbaikan popup menyatu dan kilau Jarvis lembut (`232507f0` pada fork).
+   Bingkai dan seluruh latar drawer digambar sekali melalui satu quad dengan satu snapshot SDF.
+   Mesh cincin terpisah dihapus agar pembagian piksel tidak meninggalkan celah atau penumpukan
+   tint ketika bentuk bergerak. Bentuk tersembunyi tidak lagi ikut menghitung SDF; perubahan
+   visibilitas memperbarui grup, sehingga panel tertutup tidak meninggalkan garis pada bingkai.
+
+   Kilau dihitung dari normal kontur gabungan dalam koordinat scene. Tepi 1.2 px memakai sorot
+   putih lembut yang memudar 20 px ke dalam kaca, tanpa bercak radial per sudut. Intensitas rim
+   0.05–0.24 dan sheen 0.012–0.035; tint surface tetap 0.38 mengikuti warna skema dan acuan Jarvis.
+   Bentuk serta fisika gerak panel tetap dipakai sebagai data permukaan gabungan.
+
+   Seluruh 16 kasus render lulus (24 hasil PASS termasuk setup/cleanup), termasuk panel tersembunyi,
+   pertemuan beberapa panel, posisi pecahan, kilau pada latar hitam, serta 81 frame buka/tutup pada
+   latar hitam dan 81 pada latar putih. Backend terbaru sudah aktif pada desktop.
+
+   Visual: `screenshots/11-unified-animation.webp` memperlihatkan sambungan saat transisi;
+   `screenshots/12-soft-white-reflection.png` memperlihatkan kilau akhir pada render hitam.
+   Profiling hardware dan batas hasil dicatat di [laporan performa](reports/performance-2026-11-15.md).
+   Popup dan multi-panel sekitar 60 FPS; pergantian launcher/dashboard berulang 57.45 FPS dengan
+   lonjakan interval hingga 130.43 ms. GPU grafis proses shell sekitar 5.1–11.6% pada skenario aktif.
+   Optimasi tile belum diperlukan berdasarkan pengukuran ini; sumber lonjakan launcher/dashboard
+   belum diisolasi. Probe profiling tetap di luar repo dan tidak dimuat oleh shell produksi.
