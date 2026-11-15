@@ -90,3 +90,27 @@ Tepi dan kilau hanya bisa dibuat sekali untuk semua di shader itu, jadi dipilih 
    Crop desktop terbaru: `screenshots/08-glass-bar.png` dan `screenshots/08-glass-frame-osd.png`.
    Shell paket sudah aktif kembali; autostart belum diubah. Fullscreen belum diuji langsung.
    Berikutnya: terapkan material kaca pada panel lain.
+
+
+4. Langkah 3: latar semua panel drawer utama memakai kaca (commit fork `4f89901d`).
+   Binding `glass` dipindahkan dari OSD ke komponen bersama `PanelBg`, sehingga dashboard,
+   launcher, session, sidebar, notifikasi, utilities, dan popout memakai material kaca yang sama.
+   Kartu isi, kontrol, dan warna penanda notifikasi kritis tetap memakai warna semula.
+
+   Shader kini membaurkan kontribusi semua panel terdekat dan menormalisasi bobotnya. Ini menjaga
+   tint pada 0.38 ketika dua atau tiga panel kaca bertemu. Panel yang dikecualikan dari pembauran
+   bentuk (sidebar/utilities) tetap ikut menentukan pemilik piksel, sehingga bagian tumpang tindih
+   tidak digambar dua kali. Mask exclusion tetap menjaga sudutnya tidak dibaurkan.
+
+   Tes baru `tests/tst_panelglass.qml` mula-mula gagal pada keempat kasus dengan shader lama,
+   lalu lulus setelah perbaikan: dua panel, alpha dasar 0.8, tiga panel bertumpuk, dan panel excluded.
+   Build berhasil; seluruh 7 kasus render lulus (13 hasil PASS termasuk setup/cleanup).
+   Uji desktop berhasil membuka/menutup launcher, dashboard, session, utilities, dan sidebar,
+   termasuk sidebar bersama utilities, serta menampilkan notifikasi uji lokal. Dashboard sempat
+   tertutup oleh interaksi hover pada percobaan awal dan berhasil dibuka pada percobaan berikutnya.
+   Log fork tidak menunjukkan error QML/shader. Notifikasi uji ditutup setelah pengambilan gambar.
+
+   Crop hasil tanpa riwayat notifikasi pribadi: `screenshots/09-glass-utilities.png` dan
+   `screenshots/09-glass-notification.png`. Shell paket sudah aktif kembali; autostart belum diubah.
+   Fullscreen dan seluruh variasi popout belum diuji langsung. Editor Nexus terpisah, lockscreen,
+   serta toast tetap memakai materialnya sendiri.
