@@ -1,10 +1,10 @@
 # Development log
 
-Caelestia Glass explores a macOS-inspired translucent material based on the Jarvis notch reference in `reference/jarvis-island-notch.qml`.
+Caelestia Glass explores a macOS-inspired translucent material. The `reference/` directory contains the source used for visual comparison.
 
 ## Reference and scope
 
-The intended treatment combines background blur, thin translucent tint, a soft white outline, inward sheen, concave screen-edge joins, spring motion, and wallpaper-derived colors. The reference uses layered Qt Quick shapes and outlines. The shell implementation uses a shared C++ SDF renderer, so the current appearance is an approximation rather than a verified visual match.
+The intended treatment combines background blur, thin translucent tint, a soft white outline, inward sheen, concave screen-edge joins, spring motion, and wallpaper-derived colors. The design reference uses layered Qt Quick shapes and outlines. The shell implementation uses a shared C++ SDF renderer, so the current appearance is an approximation rather than a verified visual match.
 
 ## Environment and activation
 

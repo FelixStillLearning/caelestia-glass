@@ -1,6 +1,6 @@
 # Caelestia Glass
 
-A community-maintained glass variant of [Caelestia Shell](https://github.com/caelestia-dots/shell) for Hyprland, inspired by macOS and the Jarvis notch reference.
+A community-maintained glass variant of [Caelestia Shell](https://github.com/caelestia-dots/shell) for Hyprland, inspired by macOS.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
@@ -8,7 +8,7 @@ A community-maintained glass variant of [Caelestia Shell](https://github.com/cae
 
 The shell fork applies a translucent material to the screen frame, bar, drawers, popouts, and OSD. A shared signed distance field (SDF) renderer draws connected surfaces with a soft white rim and directional sheen. Colors follow the active Caelestia wallpaper palette.
 
-The project also includes an SDDM main view and references to matching Rofi wallpaper picker configuration. The current material is an approximation of the Jarvis reference; visual parity has not been established.
+The project also includes an SDDM main view and references to matching Rofi wallpaper picker configuration. The current glass material is experimental and still needs visual refinement.
 
 ## Repositories
 
@@ -59,4 +59,4 @@ Original local desktop captures have been removed because they contained private
 
 ## License and attribution
 
-Licensed under [GNU GPL v3.0](LICENSE). Based on Caelestia Shell by the Caelestia team. The included Jarvis notch source is a visual reference for the glass treatment.
+Licensed under [GNU GPL v3.0](LICENSE). Based on Caelestia Shell by the Caelestia team.
