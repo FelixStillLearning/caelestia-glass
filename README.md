@@ -53,7 +53,7 @@ All shell previews were captured on an isolated workspace with a controlled artw
 
 - A unified renderer avoids overlapping tint and gaps where glass panels meet.
 - Text-bearing shell surfaces use a regular glass tint with semantic foreground colors in both light and dark appearances.
-- Cast shadows follow a consistent light direction. Light frames retain a faint contact shadow over white; dark frames avoid a surrounding dark halo.
+- Light glass uses a thin contour for separation over white and a soft shadow below. Dark frames avoid a surrounding dark halo.
 - System toasts share the glass renderer and preserve colored status badges. Disabling transparency restores the opaque presentation.
 - The shell fork includes render tests for shadows, frame edges, panel intersections, and popout transitions.
 - The Rofi picker uses rounded 480×480 thumbnails displayed in 240 px cards.
