@@ -49,3 +49,25 @@ Tepi dan kilau hanya bisa dibuat sekali untuk semua di shader itu, jadi dipilih 
    dan kilau sudut bawah. Lihat `screenshots/05-compare-osd.png` (kiri sebelum, kanan sesudah).
    Batasan: bayangan `MultiEffect` tertumpuk di bawah kaca, jadi alpha terukur 0.44 (target 0.38), dan ada
    pita gelap di dekat bingkai.
+
+2. Langkah 1: bayangan hanya di luar bentuk (commit fork `4dd8121d`).
+   `MultiEffect` diganti falloff SDF pada bentuk gabungan, dipotong dengan coverage geometrinya;
+   bayangan tidak ikut menambah tint kaca. Warna bayangan tetap dari skema dan memudar saat fullscreen.
+   Piksel di pertemuan panel/bingkai sekarang hanya digambar oleh satu renderer, menghilangkan
+   penumpukan transparansi. Kompensasi alpha untuk bayangan lama dihapus.
+   Render PNG terisolasi mengukur tint bagian atas OSD sebesar 97/255 (sekitar 0.38);
+   tepi dan kilau bawah memang menambah alpha. Bayangan dibatasi 15 px atau padding smoothing
+   bila lebih kecil. Lihat `screenshots/07-outer-shadow-osd.png` untuk hasil di desktop.
+   Bingkai dan bar masih memakai material awal; perubahan keduanya adalah langkah berikutnya.
+
+   Verifikasi: build plugin/shader berhasil; tes render `tests/tst_blobshadow.qml` di fork lulus
+   (tint dan sambungan panel/bingkai, bayangan di luar bentuk, piksel bagian dalam tidak berubah,
+   dan bayangan hilang saat warnanya transparan). Shader lama gagal pada tes tint yang sama.
+   Jalankan dari direktori fork dengan display aktif:
+
+   ```sh
+   QML_IMPORT_PATH="$PWD/build/qml" QSG_RHI_BACKEND=opengl /usr/lib/qt6/bin/qmltestrunner -input tests
+   ```
+
+   Uji shell singkat juga berhasil membuka OSD tanpa error di log. Sesudah uji, shell paket
+   diaktifkan kembali. Fork belum diaktifkan permanen; konfigurasi autostart belum diubah.
