@@ -58,7 +58,7 @@ Tepi dan kilau hanya bisa dibuat sekali untuk semua di shader itu, jadi dipilih 
    Render PNG terisolasi mengukur tint bagian atas OSD sebesar 97/255 (sekitar 0.38);
    tepi dan kilau bawah memang menambah alpha. Bayangan dibatasi 15 px atau padding smoothing
    bila lebih kecil. Lihat `screenshots/07-outer-shadow-osd.png` untuk hasil di desktop.
-   Bingkai dan bar masih memakai material awal; perubahan keduanya adalah langkah berikutnya.
+   Pada langkah ini bingkai dan bar masih memakai material awal; perubahan keduanya dilanjutkan di langkah 2.
 
    Verifikasi: build plugin/shader berhasil; tes render `tests/tst_blobshadow.qml` di fork lulus
    (tint dan sambungan panel/bingkai, bayangan di luar bentuk, piksel bagian dalam tidak berubah,
@@ -71,3 +71,22 @@ Tepi dan kilau hanya bisa dibuat sekali untuk semua di shader itu, jadi dipilih 
 
    Uji shell singkat juga berhasil membuka OSD tanpa error di log. Sesudah uji, shell paket
    diaktifkan kembali. Fork belum diaktifkan permanen; konfigurasi autostart belum diubah.
+
+
+3. Langkah 2: bingkai layar dan bar kaca (commit fork `ade50e78`).
+   `BlobInvertedRect.glass` yang sudah ada sekarang dikirim ke shader, memakai tint 0.38, tepi
+   1.2 px, dan kilau yang sama dengan OSD. Bar memakai latar bingkai ini sehingga tidak perlu
+   lapisan atau pengaturan tambahan. Tint dibaurkan di sambungan dengan OSD dan panel biasa;
+   panel lain masih memakai material awal. Saat transparansi dimatikan, bingkai kembali ke
+   material awal melalui binding yang sama.
+
+   Jalur mesh cincin bingkai kini menerima warna bayangan. Peralihan ke quad saat lubang bingkai
+   terlalu kecil juga membangun ulang geometry agar indeks mesh lama tidak menggambar tint dua kali.
+   Tes render `tests/tst_frameglass.qml` mencakup bar/bingkai, sambungan OSD, panel biasa,
+   bayangan luar bingkai, kedua arah peralihan mesh, dan glass dimatikan, dengan alpha dasar 1 dan 0.8.
+   Build berhasil dan seluruh tes render lulus (7 hasil PASS termasuk setup/cleanup).
+   Uji shell singkat berhasil membuka OSD dan launcher tanpa error pada log fork.
+
+   Crop desktop terbaru: `screenshots/08-glass-bar.png` dan `screenshots/08-glass-frame-osd.png`.
+   Shell paket sudah aktif kembali; autostart belum diubah. Fullscreen belum diuji langsung.
+   Berikutnya: terapkan material kaca pada panel lain.
