@@ -109,6 +109,14 @@ Validation covers the actual light and dark theme settings over white and dark b
 
 See the [light-on-white frame check](images/light-white-frame.png) and the reviewed light/dark previews in the [README](../README.md#preview). The original theme, transparency setting, notification setting, and workspace are restored after checks. Performance measurements earlier in this log predate these material changes and were not repeated.
 
+## Thin exterior lines during panel opening
+
+The shader's rectangular distance cull replaced distant shapes with a large sentinel. That discontinuity inflated the distance derivatives used for antialiasing, creating thin horizontal or vertical lines beyond moving panels. Rectangle distances now remain continuous across the frame; the glass material and real panel edges are unchanged.
+
+Regression checks reproduce the old artifact at fractional panel positions over black and white backgrounds in both appearances. The complete render suite now reports 44 PASS results, including setup and cleanup, with no failures. Weather and utilities panels were also checked in the active shell on an isolated workspace. The reviewed utilities previews were refreshed.
+
+Removing the distance cull increases shader work. A short 8.1-second multi-panel check reached 59.80 FPS, with a 17.99 ms p95 frame interval and 19.60% shell graphics engine utilization on the same device used for the earlier profile. This is a spot check, not a controlled before/after comparison or a battery measurement.
+
 ## Public assets and privacy
 
 Local desktop captures were removed from the project and its rewritten Git history because they exposed private notifications and application content. The screenshot directory is ignored. Any future showcase images must be reviewed in full, including backgrounds visible through transparent surfaces.
