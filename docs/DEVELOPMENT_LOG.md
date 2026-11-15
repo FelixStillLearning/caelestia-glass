@@ -1,195 +1,88 @@
-# caelestia-glass
+# Development log
 
-Mengubah tampilan Caelestia shell supaya bergaya kaca cair ala macOS, mengikuti notch Jarvis.
+Caelestia Glass explores a macOS-inspired translucent material based on the Jarvis notch reference in `reference/jarvis-island-notch.qml`.
 
-## Tujuan
+## Reference and scope
 
-Bar, drawer, popup, dan panel Caelestia memakai bahasa visual yang sama dengan notch Jarvis:
+The intended treatment combines background blur, thin translucent tint, a soft white outline, inward sheen, concave screen-edge joins, spring motion, and wallpaper-derived colors. The reference uses layered Qt Quick shapes and outlines. The shell implementation uses a shared C++ SDF renderer, so the current appearance is an approximation rather than a verified visual match.
 
-- kaca tembus pandang: latar di belakangnya diburamkan oleh Hyprland (layer rule `blur` + `ignore_alpha`),
-  di atasnya warna `surface` tipis (alpha sekitar 0.38)
-- tepi bercahaya: garis putih lembut 1.2 px mengikuti kontur dan arah cahaya
-- kilau halus memudar 20 px ke dalam kaca
-- bentuk menempel ke tepi layar dengan lekukan cekung (seperti notch MacBook)
-- gerak pegas saat melebar/menyusut
-- warna tetap dari skema Caelestia (ikut wallpaper)
+## Environment and activation
 
-Acuan kode: `reference/jarvis-island-notch.qml` (bagian `Shape` berlapis dan `outline` SVG).
+Development used Caelestia Shell 2.5.0, Hyprland 0.57 with Lua configuration, and Qt 6.12. The packaged shell remained in `/etc/xdg/quickshell/caelestia`; the fork was built separately on its `glass` branch.
 
-## Kondisi awal (2026-11-15)
-
-- Caelestia shell 2.5.0 dari paket `caelestia-shell`, terpasang di `/etc/xdg/quickshell/caelestia`
-  (Quickshell/QML, sekitar 282 berkas). Modul: `bar`, `drawers`, `dashboard`, `launcher`, `notifications`,
-  `osd`, `sidebar`, `session`, `lock`, `utilities`, dan lain-lain.
-- Pengaturan user: `~/.config/caelestia/shell.json` (`appearance.transparency.enabled = true`).
-- Layer rule Caelestia di `~/.config/hypr/hyprland/rules.lua`: `caelestia-(drawers|background)` baru diberi
-  animasi fade, belum diberi blur.
-- Hyprland 0.57 dengan config Lua (`hl.layer_rule`, `hl.dsp.*`). Qt 6.12, jadi `ShapePath.strokeGradient` tersedia.
-- Jarvis sudah di-uninstall; notch-nya sendiri tidak berjalan. Arsip lengkap ada di repo
-  `caelestia-hypr-backup` (branch `main`).
-
-## Keputusan: fork (2026-11-15)
-
-Semua latar (bingkai layar, bar, dan semua panel) digambar oleh satu `BlobGroup` di
-`modules/drawers/ContentWindow.qml`, dengan shader SDF di plugin C++ (`plugin/src/Caelestia/Blobs/shaders/blob.frag`).
-Tepi dan kilau hanya bisa dibuat sekali untuk semua di shader itu, jadi dipilih fork.
-
-- Fork: `~/.local/src/caelestia-shell`, branch `glass` dari tag upstream `v2.5.0`, remote `upstream`.
-  Belum ada fork di GitHub.
-- Build plugin: `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_MODULES=plugin`, lalu
-  `cmake --build build`.
-- Aktif permanen sejak 2026-11-15: `~/.config/quickshell/caelestia` adalah symlink ke fork.
-  Autostart di `~/.config/hypr/hyprland/execs.lua` menjalankan
-  `env QML_IMPORT_PATH="$HOME/.local/src/caelestia-shell/build/qml" caelestia shell -d`.
-- Cadangan autostart asli: `~/.local/state/caelestia-glass/backups/20261115-133303/execs.lua`.
-  Metadata aktivasi dan lokasi plugin tersimpan di `~/.local/state/caelestia-glass/activation.json`.
-- `/etc` dan `/usr` tetap memakai paket sistem; perubahan konfigurasi hanya pada user.
-
-Untuk restart manual, periksa `qs -c caelestia ipc call lock isLocked` terlebih dahulu. Lanjutkan hanya
-jika hasilnya `false`, karena lockscreen ada di dalam shell. Sertakan lokasi plugin hasil build:
-
-```sh
-QML_IMPORT_PATH="$HOME/.local/src/caelestia-shell/build/qml" caelestia shell -r -d
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_MODULES=plugin
+cmake --build build
 ```
 
-Untuk kembali ke shell paket: ketika sesi tidak terkunci, hentikan fork dengan `qs -c caelestia kill`,
-hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart kembali menjadi
-`caelestia shell -d`, lalu jalankan `caelestia shell -d`. Cadangan tersedia untuk membandingkan isi
-`execs.lua`; jangan menimpa perubahan lain yang dibuat setelah aktivasi.
+The runtime configuration links `~/.config/quickshell/caelestia` to the fork in `~/.local/src/caelestia-shell`. Autostart must include the compiled QML plugin path:
 
-## Progres
+```bash
+env QML_IMPORT_PATH="$HOME/.local/src/caelestia-shell/build/qml" caelestia shell -d
+```
 
-1. Prototipe kaca pada OSD (commit fork `5ee9f2fe`). Hasilnya: kaca buram, tepi 1.2 px terang di sudut,
-   dan kilau sudut bawah.
-   Batasan: bayangan `MultiEffect` tertumpuk di bawah kaca, jadi alpha terukur 0.44 (target 0.38), dan ada
-   pita gelap di dekat bingkai.
+Check `qs -c caelestia ipc call lock isLocked` before stopping or restarting the shell. Continue only when the result is `false`. Activation changes were confined to user configuration; system packages were retained.
 
-2. Langkah 1: bayangan hanya di luar bentuk (commit fork `4dd8121d`).
-   `MultiEffect` diganti falloff SDF pada bentuk gabungan, dipotong dengan coverage geometrinya;
-   bayangan tidak ikut menambah tint kaca. Warna bayangan tetap dari skema dan memudar saat fullscreen.
-   Piksel di pertemuan panel/bingkai sekarang hanya digambar oleh satu renderer, menghilangkan
-   penumpukan transparansi. Kompensasi alpha untuk bayangan lama dihapus.
-   Render PNG terisolasi mengukur tint bagian atas OSD sebesar 97/255 (sekitar 0.38);
-   tepi dan kilau bawah memang menambah alpha. Bayangan dibatasi 15 px atau padding smoothing
-   bila lebih kecil.
-   Pada langkah ini bingkai dan bar masih memakai material awal; perubahan keduanya dilanjutkan di langkah 2.
+## Implementation history
 
-   Verifikasi: build plugin/shader berhasil; tes render `tests/tst_blobshadow.qml` di fork lulus
-   (tint dan sambungan panel/bingkai, bayangan di luar bentuk, piksel bagian dalam tidak berubah,
-   dan bayangan hilang saat warnanya transparan). Shader lama gagal pada tes tint yang sama.
-   Jalankan dari direktori fork dengan display aktif:
+### OSD prototype and outer shadows
 
-   ```sh
-   QML_IMPORT_PATH="$PWD/build/qml" QSG_RHI_BACKEND=opengl /usr/lib/qt6/bin/qmltestrunner -input tests
-   ```
+The first OSD prototype introduced a bright 1.2 px rim and corner sheen. A `MultiEffect` shadow overlapped the translucent surface, raising measured alpha to approximately 0.44 instead of the intended 0.38 and leaving a dark band near the frame.
 
-   Uji shell singkat juga berhasil membuka OSD tanpa error di log. Sesudah uji, shell paket
-   diaktifkan kembali. Fork belum diaktifkan permanen; konfigurasi autostart belum diubah.
+The replacement computes shadow falloff from the combined SDF and clips it to the outside of the geometry. This prevents the shadow from increasing surface tint. The shadow is limited to 15 px or the smaller smoothing padding, follows the color scheme, and fades during fullscreen transitions.
 
+An isolated render measured OSD tint at 97/255, approximately 0.38. Render tests cover tint, panel/frame joins, exterior shadows, unchanged interior pixels, and transparent shadow colors. The old shader failed the same tint check.
 
-3. Langkah 2: bingkai layar dan bar kaca (commit fork `ade50e78`).
-   `BlobInvertedRect.glass` yang sudah ada sekarang dikirim ke shader, memakai tint 0.38, tepi
-   1.2 px, dan kilau yang sama dengan OSD. Bar memakai latar bingkai ini sehingga tidak perlu
-   lapisan atau pengaturan tambahan. Tint dibaurkan di sambungan dengan OSD dan panel biasa;
-   panel lain masih memakai material awal. Saat transparansi dimatikan, bingkai kembali ke
-   material awal melalui binding yang sama.
+### Screen frame and bar
 
-   Jalur mesh cincin bingkai kini menerima warna bayangan. Peralihan ke quad saat lubang bingkai
-   terlalu kecil juga membangun ulang geometry agar indeks mesh lama tidak menggambar tint dua kali.
-   Tes render `tests/tst_frameglass.qml` mencakup bar/bingkai, sambungan OSD, panel biasa,
-   bayangan luar bingkai, kedua arah peralihan mesh, dan glass dimatikan, dengan alpha dasar 1 dan 0.8.
-   Build berhasil dan seluruh tes render lulus (7 hasil PASS termasuk setup/cleanup).
-   Uji shell singkat berhasil membuka OSD dan launcher tanpa error pada log fork.
+Frame glass initially reused the OSD material through `BlobInvertedRect.glass`. Tests covered the bar, frame, panel joins, outer shadow, mesh transitions, and disabled glass at base alpha values of 1 and 0.8. Builds and the corresponding render tests passed during development.
 
-   Shell paket sudah aktif kembali; autostart belum diubah. Fullscreen belum diuji langsung.
-   Berikutnya: terapkan material kaca pada panel lain.
+### Shared panel glass
 
+Moving the binding to the shared `PanelBg` applied the material to the dashboard, launcher, session panel, sidebar, notifications, utilities, and popouts. Content cards, controls, and critical notification indicators retained their existing colors.
 
-4. Langkah 3: latar semua panel drawer utama memakai kaca (commit fork `4f89901d`).
-   Binding `glass` dipindahkan dari OSD ke komponen bersama `PanelBg`, sehingga dashboard,
-   launcher, session, sidebar, notifikasi, utilities, dan popout memakai material kaca yang sama.
-   Kartu isi, kontrol, dan warna penanda notifikasi kritis tetap memakai warna semula.
+Contributions from nearby panels are normalized to maintain a single tint where two or three glass shapes meet. Sidebar and utility shapes excluded from contour blending still participate in pixel ownership, preventing overlapping surfaces from being drawn twice.
 
-   Shader kini membaurkan kontribusi semua panel terdekat dan menormalisasi bobotnya. Ini menjaga
-   tint pada 0.38 ketika dua atau tiga panel kaca bertemu. Panel yang dikecualikan dari pembauran
-   bentuk (sidebar/utilities) tetap ikut menentukan pemilik piksel, sehingga bagian tumpang tindih
-   tidak digambar dua kali. Mask exclusion tetap menjaga sudutnya tidak dibaurkan.
+Tests initially failed with the previous shader and then passed for two-panel joins, base alpha 0.8, three overlapping panels, and excluded panels. Desktop checks exercised the main drawers and a synthetic local notification.
 
-   Tes baru `tests/tst_panelglass.qml` mula-mula gagal pada keempat kasus dengan shader lama,
-   lalu lulus setelah perbaikan: dua panel, alpha dasar 0.8, tiga panel bertumpuk, dan panel excluded.
-   Build berhasil; seluruh 7 kasus render lulus (13 hasil PASS termasuk setup/cleanup).
-   Uji desktop berhasil membuka/menutup launcher, dashboard, session, utilities, dan sidebar,
-   termasuk sidebar bersama utilities, serta menampilkan notifikasi uji lokal. Dashboard sempat
-   tertutup oleh interaksi hover pada percobaan awal dan berhasil dibuka pada percobaan berikutnya.
-   Log fork tidak menunjukkan error QML/shader. Notifikasi uji ditutup setelah pengambilan gambar.
+### Unified rendering and sheen
 
-   Shell paket sudah aktif kembali; autostart belum diubah.
-   Fullscreen dan seluruh variasi popout belum diuji langsung. Editor Nexus terpisah, lockscreen,
-   serta toast tetap memakai materialnya sendiri.
+The frame and drawer backgrounds now render once through a single quad and one SDF snapshot. The separate ring mesh was removed to avoid gaps and duplicated tint during motion. Hidden shapes no longer affect the SDF, and visibility changes update the group.
 
+Contour normals in scene coordinates control a soft directional white rim and inward sheen. The recorded parameters are a 1.2 px rim, a 20 px inward fade, rim intensity 0.05–0.24, sheen intensity 0.012–0.035, and surface tint alpha 0.38. These values describe the current approximation; they do not establish parity with the layered reference.
 
-5. Langkah 4: verifikasi fullscreen/popout dan aktivasi permanen (2026-11-15).
-   Jendela uji Qt 6 dipindahkan masuk/keluar fullscreen tanpa mengubah jendela pengguna.
-   Saat fullscreen, lima sampel tepi layar sama dengan warna jendela uji dan launcher tetap tertutup.
-   Setelah keluar, bingkai kembali dan launcher dapat dibuka lagi. Hasilnya tersimpan lokal di
-   `~/.local/state/caelestia-glass/validation-result.txt`.
+Development validation recorded 16 render cases passing, or 24 PASS results including setup and cleanup. Coverage included hidden panels, panel intersections, fractional positions, sheen on black backgrounds, and 81 opening/closing frames on each of black and white backgrounds.
 
-   Popout baterai dan jaringan diperiksa secara visual dan menampilkan kaca beserta tepinya.
-   Variasi lain, termasuk dialog sandi/tray bertingkat, belum diuji lengkap. Sempat ada warning
-   model notifikasi `null` saat popup ditutup pada sesi validasi; berkas notifikasi tidak diubah.
+Run the fork's render tests with an active display:
 
-   Symlink dan autostart sudah dipasang, lalu fork diluncurkan ulang lewat `caelestia shell -d`
-   dengan environment yang sama dengan autostart. Hanya satu instance berjalan melalui konfigurasi
-   user; kedua library Blobs yang dimuat berasal dari direktori build fork. Pemeriksaan sintaks Lua
-   dan `hyprctl configerrors` lulus. Log peluncuran aktif tidak memiliki error QML/load pada saat dicek.
-   Shell kaca dibiarkan aktif. Autostart berikutnya belum diuji dengan reboot/logout.
+```bash
+QML_IMPORT_PATH="$PWD/build/qml" QSG_RHI_BACKEND=opengl /usr/lib/qt6/bin/qmltestrunner -input tests
+```
 
+### Desktop activation checks
 
-6. Perbaikan popup menyatu dan kilau Jarvis lembut (`232507f0` pada fork).
-   Bingkai dan seluruh latar drawer digambar sekali melalui satu quad dengan satu snapshot SDF.
-   Mesh cincin terpisah dihapus agar pembagian piksel tidak meninggalkan celah atau penumpukan
-   tint ketika bentuk bergerak. Bentuk tersembunyi tidak lagi ikut menghitung SDF; perubahan
-   visibilitas memperbarui grup, sehingga panel tertutup tidak meninggalkan garis pada bingkai.
+A temporary Qt window was moved into and out of fullscreen. Five sampled screen-edge pixels matched the test window while fullscreen; after leaving fullscreen, the frame returned and the launcher opened again.
 
-   Kilau dihitung dari normal kontur gabungan dalam koordinat scene. Tepi 1.2 px memakai sorot
-   putih lembut yang memudar 20 px ke dalam kaca, tanpa bercak radial per sudut. Intensitas rim
-   0.05–0.24 dan sheen 0.012–0.035; tint surface tetap 0.38 mengikuti warna skema dan acuan Jarvis.
-   Bentuk serta fisika gerak panel tetap dipakai sebagai data permukaan gabungan.
+Battery and network popouts were checked visually. One notification model `null` warning appeared during a validation run. The active shell subsequently loaded the fork's two Blobs libraries without QML/plugin loading errors at the time checked. Lua syntax and `hyprctl configerrors` checks passed.
 
-   Seluruh 16 kasus render lulus (24 hasil PASS termasuk setup/cleanup), termasuk panel tersembunyi,
-   pertemuan beberapa panel, posisi pecahan, kilau pada latar hitam, serta 81 frame buka/tutup pada
-   latar hitam dan 81 pada latar putih. Backend terbaru sudah aktif pada desktop.
+Logout/reboot autostart, all nested tray/password popouts, and every display configuration were not verified.
 
-   Profiling hardware dan batas hasil dicatat di [laporan performa](../reports/performance-2026-11-15.md).
-   Popup dan multi-panel sekitar 60 FPS; pergantian launcher/dashboard berulang 57.45 FPS dengan
-   lonjakan interval hingga 130.43 ms. GPU grafis proses shell sekitar 5.1–11.6% pada skenario aktif.
-   Optimasi tile belum diperlukan berdasarkan pengukuran ini; sumber lonjakan launcher/dashboard
-   belum diisolasi. Probe profiling tetap di luar repo dan tidak dimuat oleh shell produksi.
+### Rofi wallpaper picker
 
+The Super+W picker is a separate Rofi process. Its compositor rule enables blur for the `rofi` namespace with `ignore_alpha = 0.2` and `popin 90%` animation. The color synchronizer exports translucent `glass`, `glass-card`, and `glass-hi` colors from the active palette.
 
-7. Modernisasi Rofi Wallpaper Picker (Super+W) & Menu Kaca macOS (2026-11-15).
-   Pemilih wallpaper Super+W ternyata dipanggil lewat Rofi (`wppicker.sh`), terpisah dari shell utama.
-   Tampilannya dimodernisasi mengikuti estetika liquid glass macOS:
+The picker generates rounded 480×480 thumbnails through FFmpeg for 240 px cards. Square thumbnails fill Rofi's square icon allocation; plain 16:9 thumbnails previously left vertical space. Labels omit folders and extensions. The search field sits above the grid, with a subtle white card border and palette-derived selection accent. A separate 440 px category menu theme is also available; the current picker opens the wallpaper grid directly.
 
-   - Layer blur Hyprland: ditambahkan aturan `namespace = "rofi"` dengan `blur = true`, `ignore_alpha = 0.2`,
-     dan animasi `popin 90%` di `~/.config/hypr/hyprland/rules.lua`.
-   - Warna kaca: `~/.local/bin/sync-caelestia-rofi.py` secara otomatis mengekspor variabel `glass`
-     (surface transparan), `glass-card`, dan `glass-hi` ke `colors.rasi` setiap kali skema diperbarui.
-   - Thumbnail squircle presisi: `wppicker.sh` menghasilkan cache thumbnail 480x480 dengan sudut melengkung
-     halus lewat ffmpeg, mengisi penuh kartu 240px tanpa menyisakan ruang kosong di atas/bawah. Nama wallpaper
-     ditampilkan rapi tanpa ekstensi dan path folder.
-   - Layout Spotlight: bilah pencarian berbentuk kapsul (pill) diposisikan di atas grid (`children: [ "inputbar", "listview" ]`),
-     kartu wallpaper memakai border putih tipis lembut `rgba(255, 255, 255, 10%)`, dan kartu terpilih disorot
-     dengan `glass-hi` serta garis aksen `@primary`.
-   - Dialog kategori (`caelestia-menu.rasi`): menu kategori ringkas 440px berlatar kaca dan border melengkung 32px.
+### QML and SDDM
 
+Launcher and Nexus wallpaper items received selection borders, check indicators, adjusted grid sizing, and cleaned labels. Lockscreen changes align the clock, transparent password input, profile presentation, and surrounding glass surfaces. The supplied SDDM main view depends on the existing theme's components and assets.
 
+## Performance
 
-8. Penyempurnaan Shell QML fork & SDDM (`31463924` pada fork).
-   - Launcher & Nexus: `WallpaperItem.qml`, `WallItem.qml`, `WallpaperSelect.qml`, dan `WallpaperCategory.qml`
-     diselaraskan dengan border seleksi kaca, indikator centang dinamis, penyesuaian kolom grid responsif,
-     dan nama berkas yang bersih.
-   - Lockscreen: `modules/lock/` (`LockSurface.qml`, `Center.qml`, `Clock.qml`, `PasswordInput.qml`, `ProfilePic.qml`)
-     disempurnakan dengan penataan kartu kaca transparan, jam berbobot bersih, dan label pengguna yang rapi.
-   - SDDM Login Theme: `sddm/Main.qml` menyelaraskan blur latar belakang dan kartu login dengan gaya Caelestia.
+The [performance report](../reports/performance-2026-11-15.md) records the method, hardware, results, and limits. Popup and multi-panel scenarios reached approximately 60 FPS; repeated launcher/dashboard switching reached 57.45 FPS with intervals up to 130.43 ms. Shell graphics engine utilization was approximately 5.1–11.6% in active scenarios.
 
+The measurement did not establish a need for tile optimization. The cause of launcher/dashboard frame interval spikes remains unisolated. Temporary measurement probes stayed outside the production fork.
+
+## Public assets and privacy
+
+Local desktop captures were removed from the project and its rewritten Git history because they exposed private notifications and application content. The screenshot directory is ignored. Any future showcase images must be reviewed in full, including backgrounds visible through transparent surfaces.

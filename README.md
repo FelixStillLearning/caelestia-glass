@@ -1,90 +1,54 @@
 # Caelestia Glass
 
-> Varian tema kaca cair (*macOS-inspired Liquid Glass*) untuk Caelestia Shell dan Hyprland.
+A community-maintained glass variant of [Caelestia Shell](https://github.com/caelestia-dots/shell) for Hyprland, inspired by macOS and the Jarvis notch reference.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Hyprland](https://img.shields.io/badge/Compositor-Hyprland-brightgreen.svg)](https://hyprland.org)
-[![Quickshell](https://img.shields.io/badge/Framework-Quickshell-purple.svg)](https://quickshell.outfoxxed.me)
 
----
+## Overview
 
-## Gambaran Umum
+The shell fork applies a translucent material to the screen frame, bar, drawers, popouts, and OSD. A shared signed distance field (SDF) renderer draws connected surfaces with a soft white rim and directional sheen. Colors follow the active Caelestia wallpaper palette.
 
-**Caelestia Glass** mentransformasikan Caelestia Shell dari estetika datar Material 3 menjadi tampilan kaca tembus pandang (*liquid glass*) ala macOS. Bar, drawer, popout, notification center, lockscreen, hingga pemilih wallpaper Rofi disatukan di bawah satu bahasa visual yang kohesif:
+The project also includes an SDDM main view and references to matching Rofi wallpaper picker configuration. The current material is an approximation of the Jarvis reference; visual parity has not been established.
 
-- **Kaca Tembus Pandang**: Latar belakang diburamkan oleh Hyprland (`blur = true`, `ignore_alpha = 0.2`) dengan lapisan warna dinamis yang tipis (*translucent surface*).
-- **Tepi Bercahaya (*Specular Rim*)**: Garis putih lembut 1.2 px mengikuti kontur bentuk dan arah pencahayaan.
-- **Kilau Lembut (*Sheen*)**: Gradasi pantulan memudar halus 20 px ke dalam permukaan kaca.
-- **Transisi Pegas Alami**: Animasi ekspansi dan kontraksi bentuk menempel ke tepi layar.
-- **Palet Warna Adaptif**: Mengikuti skema warna wallpaper aktif melalui integrasi otomatis Matugen.
+## Repositories
 
----
+- [caelestia-glass](https://github.com/FelixStillLearning/caelestia-glass): documentation, installation helper, SDDM main view, and design reference.
+- [caelestia-shell, glass branch](https://github.com/FelixStillLearning/caelestia-shell/tree/glass): C++ shader and QML implementation.
+- [caelestia-hypr-backup](https://github.com/FelixStillLearning/caelestia-hypr-backup): Hyprland rules, Rofi themes, and wallpaper scripts. Review individual files before applying them to an existing desktop.
 
-## Fitur Utama
+This is an independent community variant. It is not an upstream Caelestia release.
 
-1. **Shader Kaca Terpadu (SDF C++ Plugin)**
-   - Menggunakan snapshot *Signed Distance Field* (SDF) tunggal untuk menggambar bingkai layar dan seluruh panel drawer.
-   - Tidak ada celah antar-mesh atau penumpukan tint saat beberapa panel saling bersentuhan atau bertransisi.
+## Installation
 
-2. **Rofi Wallpaper Picker Bergaya macOS Spotlight**
-   - Bilah pencarian berbentuk kapsul (pill) di bagian atas.
-   - Menghasilkan thumbnail squircle HiDPI (480x480) bersudut melengkung halus lewat ffmpeg.
-   - Mengisi kartu 240px secara proporsional tanpa celah kosong vertikal.
-   - Dialog pemilihan kategori warna dan folder dengan latar kaca 440px.
+Read [INSTALL.md](INSTALL.md) before making changes. An existing Hyprland and Caelestia environment is required.
 
-3. **Komponen Shell QML yang Diselaraskan**
-   - **Lockscreen**: Jam minimalis, input kata sandi transparan, dan label pengguna yang bersih.
-   - **Launcher & Nexus**: Kartu wallpaper proporsional dengan border seleksi dan indikator centang dinamis.
-   - **SDDM Login Theme**: Berkas tema `Main.qml` terpadu dengan efek blur latar belakang.
+```bash
+git clone https://github.com/FelixStillLearning/caelestia-glass.git
+mkdir -p "$HOME/.local/src"
+git clone -b glass https://github.com/FelixStillLearning/caelestia-shell.git "$HOME/.local/src/caelestia-shell"
+cd caelestia-glass
+./setup.sh
+```
 
-4. **Efisiensi & Performa Teruji**
-   - Berjalan pada ~60 FPS dengan lonjakan minimal. Penggunaan GPU berkisar antara 5.1–11.6% pada skenario aktif. Detail pengukuran tersedia di [reports/performance-2026-11-15.md](reports/performance-2026-11-15.md).
+The helper builds an existing fork checkout and links it into the Quickshell configuration. It does not install system packages, clone the fork, or install the Rofi and SDDM components. Back up any existing `~/.config/quickshell/caelestia` configuration first.
 
----
+The development environment used Hyprland 0.57, Qt 6.12, CMake, Ninja, a C++ compiler, Rofi, FFmpeg, Python, and Pillow. Fonts used include SF Pro and Material Symbols Rounded; obtain fonts separately under their respective licenses.
 
-## Struktur Proyek
+## Implementation and validation
 
-Proyek ini terbagi ke dalam komponen berikut:
+- A unified renderer avoids overlapping tint and gaps where glass panels meet.
+- The shell fork includes render tests for shadows, frame edges, panel intersections, and popout transitions.
+- The Rofi picker uses rounded 480×480 thumbnails displayed in 240 px cards.
+- The SDDM file is an adapted main view, not a complete standalone SDDM theme.
 
-- **[caelestia-glass](https://github.com/FelixStillLearning/caelestia-glass)**: Repository pusat dokumentasi, aset, tema SDDM, dan panduan instalasi.
-- **[caelestia-shell (branch: glass)](https://github.com/FelixStillLearning/caelestia-shell/tree/glass)**: Fork dari Caelestia Shell yang memuat modifikasi shader SDF C++ dan modul QML.
-- **[caelestia-hypr-backup](https://github.com/FelixStillLearning/caelestia-hypr-backup)**: Referensi konfigurasi dotfiles lengkap (Hyprland, Rofi, skrip wallpaper).
+A short measurement on one device reached approximately 60 FPS for popup and multi-panel scenarios, with 5.1–11.6% shell graphics engine utilization. Repeated launcher/dashboard switching reached 57.45 FPS and showed frame interval spikes. These results do not establish performance on other systems. See the [performance report](reports/performance-2026-11-15.md).
 
----
+See the [development log](docs/DEVELOPMENT_LOG.md) for implementation details and validation limits.
 
-## Panduan Instalasi Cepat
+## Screenshots and privacy
 
-### Prasyarat
-- Hyprland 0.45+ (dengan dukungan layer blur)
-- Quickshell (Qt 6.12+)
-- `cmake`, `ninja`, `gcc`
-- `rofi-wayland`, `ffmpeg`, `python-pillow`
-- Font: `SF Pro Text`, `Material Symbols Rounded`
+Local desktop captures have been removed because they contained private notifications and application content. The `screenshots/` directory is ignored by Git. Only publish new images after reviewing all visible content, including content behind transparent panels.
 
-### Instalasi
-1. Klon repository ini:
-   ```bash
-   git clone https://github.com/FelixStillLearning/caelestia-glass.git
-   cd caelestia-glass
-   ```
+## License and attribution
 
-2. Jalankan skrip setup otomatis:
-   ```bash
-   ./setup.sh
-   ```
-
-Untuk panduan pemasangan manual langkah-demi-langkah, silakan baca **[INSTALL.md](INSTALL.md)**.
-
----
-
-## Dokumentasi Teknis
-
-Catatan riset, analisis matematis shader, dan riwayat iterasi pengembangan didokumentasikan secara lengkap pada **[docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md)**.
-
----
-
-## Lisensi dan Atribusi
-
-- Dilisensikan di bawah [GNU General Public License v3.0](LICENSE).
-- Basis shell didasarkan pada [Caelestia Shell](https://github.com/caelestia-dots/shell) oleh tim Caelestia.
-- Acuan desain outline dan lekukan kaca terinspirasi dari konsep notch Jarvis.
+Licensed under [GNU GPL v3.0](LICENSE). Based on Caelestia Shell by the Caelestia team. The included Jarvis notch source is a visual reference for the glass treatment.

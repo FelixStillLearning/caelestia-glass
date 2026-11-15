@@ -1,126 +1,104 @@
-# Panduan Pemasangan Caelestia Glass
+# Installing Caelestia Glass
 
-Dokumen ini menjelaskan langkah-langkah instalasi dan konfigurasi Caelestia Glass untuk Hyprland.
+This guide assumes an existing Hyprland and Caelestia installation. Review and back up configuration files before replacing them.
 
----
+## Dependencies
 
-## 1. Prasyarat Sistem
+Install Hyprland, Quickshell, Caelestia CLI, CMake, Ninja, a C++ compiler, Rofi with Wayland support, FFmpeg, Python, and Pillow. The development environment used Hyprland 0.57 and Qt 6.12; older versions have not been verified.
 
-Pastikan paket dan dependensi berikut terpasang pada distribusi Linux Anda (Arch Linux / basis Arch):
+For the build and wallpaper tools on Arch Linux:
 
-### Paket Utama
-- **Hyprland** (versi 0.45+ dengan dukungan layer blur)
-- **Quickshell** (versi berbasis Qt 6.12+)
-- **caelestia-cli** / lingkungan Caelestia
-- **rofi-wayland**
-- **ffmpeg** (dibutuhkan untuk pembuatan cache thumbnail wallpaper)
-- **python** dan **python-pillow** (untuk ekstraksi palet warna)
-- **cmake**, **ninja**, **gcc** / **clang** (untuk mengompilasi plugin C++ Blobs)
-
-### Font
-- **SF Pro Text** / **SF Pro Display**
-- **Material Symbols Rounded**
-
-Contoh instalasi dependensi pada Arch Linux:
 ```bash
 sudo pacman -S cmake ninja gcc rofi-wayland ffmpeg python python-pillow
 ```
 
----
+This command does not install the full desktop environment. Install compatible Hyprland, Quickshell, and Caelestia packages separately. Obtain SF Pro and Material Symbols Rounded fonts separately under their respective licenses.
 
-## 2. Pemasangan Fork Caelestia Shell
+## Build the shell fork
 
-Caelestia Glass menggunakan fork dari `caelestia-shell` dengan modifikasi pada shader SDF dan modul QML.
-
-### Langkah A: Kloning dan Build Fork
 ```bash
-mkdir -p ~/.local/src
-git clone -b glass https://github.com/FelixStillLearning/caelestia-shell.git ~/.local/src/caelestia-shell
-cd ~/.local/src/caelestia-shell
-
-# Konfigurasi dan kompilasi plugin C++
+mkdir -p "$HOME/.local/src"
+git clone -b glass https://github.com/FelixStillLearning/caelestia-shell.git "$HOME/.local/src/caelestia-shell"
+cd "$HOME/.local/src/caelestia-shell"
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_MODULES=plugin
 cmake --build build
 ```
 
-### Langkah B: Tautkan Konfigurasi Quickshell
+Back up or move any existing `~/.config/quickshell/caelestia` directory or symlink before creating the link:
+
 ```bash
-mkdir -p ~/.config/quickshell
-ln -sfn ~/.local/src/caelestia-shell ~/.config/quickshell/caelestia
+mkdir -p "$HOME/.config/quickshell"
+ln -s "$HOME/.local/src/caelestia-shell" "$HOME/.config/quickshell/caelestia"
 ```
 
-### Langkah C: Konfigurasi Autostart Hyprland
-Agar plugin C++ yang telah dikompilasi termuat pada saat sistem memulai Caelestia shell, tambahkan environment variable `QML_IMPORT_PATH` pada autostart Anda.
+Alternatively, after cloning the fork, run `./setup.sh` from this repository. The helper builds the fork, creates the configuration link, runs an existing Rofi color synchronizer if available, and requests a Hyprland reload. It does not install packages or configure autostart.
 
-Bila menggunakan konfigurasi Lua Caelestia (`~/.config/hypr/hyprland/execs.lua`):
+## Configure autostart
+
+For a Caelestia Lua configuration in `~/.config/hypr/hyprland/execs.lua`, adjust the existing shell command:
+
 ```lua
--- Tambahkan atau ubah eksekusi Caelestia shell:
 hl.exec_once("env QML_IMPORT_PATH=" .. os.getenv("HOME") .. "/.local/src/caelestia-shell/build/qml caelestia shell -d")
 ```
 
-Bila menggunakan format `hyprland.conf` standar:
+For a standard `hyprland.conf`:
+
 ```ini
 exec-once = env QML_IMPORT_PATH=$HOME/.local/src/caelestia-shell/build/qml caelestia shell -d
 ```
 
----
+## Compositor rules
 
-## 3. Konfigurasi Aturan Layer Hyprland
+The glass material requires compositor blur. Review the matching rules in the [dotfiles repository](https://github.com/FelixStillLearning/caelestia-hypr-backup/blob/main/hypr/hyprland/rules.lua) for the Hyprland version you use. Do not replace your entire rules file.
 
-Efek kaca cair membutuhkan blur dan penyesuaian alpha pada level compositor.
-
-Tambahkan aturan berikut pada konfigurasi aturan layer Anda (`~/.config/hypr/hyprland/rules.lua` atau `hyprland.conf`):
+The Rofi rule used by the Lua configuration is:
 
 ```lua
--- Aturan layer untuk Rofi (Wallpaper Picker & Menu Kaca)
 hl.layer_rule({ match = { namespace = "rofi" }, blur = true, ignore_alpha = 0.2, animation = "popin 90%" })
-
--- Aturan layer untuk Caelestia Shell
-hl.layer_rule({ match = { namespace = "caelestia-(drawers|background)" }, animation = "fade" })
-hl.layer_rule({ match = { namespace = "caelestia-(border-exclusion|area-picker)" }, no_anim = true })
 ```
 
-Atau dalam sintaks `hyprland.conf`:
-```ini
-layerrule = blur, rofi
-layerrule = ignorealpha 0.2, rofi
-layerrule = animation popin 90%, rofi
+The shell uses the `caelestia-(drawers|background)` namespaces. Preserve the existing shell blur and animation rules when merging configuration. Reload after editing:
 
-layerrule = animation fade, caelestia-(drawers|background)
-layerrule = noanim, caelestia-(border-exclusion|area-picker)
-```
-
-Muat ulang konfigurasi Hyprland:
 ```bash
 hyprctl reload
 ```
 
----
+## Rofi wallpaper picker
 
-## 4. Pemasangan Rofi Wallpaper Picker (Super+W)
+The following files are available in the [dotfiles repository](https://github.com/FelixStillLearning/caelestia-hypr-backup):
 
-1. Salin berkas tema Rofi ke `~/.config/rofi/`:
-   - `wallpaper-picker.rasi` (tampilan grid wallpaper)
-   - `caelestia-menu.rasi` (dialog pemilihan kategori)
-2. Salin skrip pembantu:
-   - `wppicker.sh` ke `~/.config/hypr/scripts/wppicker.sh` (pastikan `chmod +x`)
-   - `sync-caelestia-rofi.py` ke `~/.local/bin/sync-caelestia-rofi.py` (pastikan `chmod +x`)
-3. Tautkan keybinding pada Hyprland (misal `SUPER + W`):
-   ```lua
-   hl.bind("SUPER + W", hl.dsp.exec_cmd("~/.config/hypr/scripts/wppicker.sh"))
-   ```
+- `rofi/wallpaper-picker.rasi` and `rofi/caelestia-menu.rasi`: copy to `~/.config/rofi/`.
+- `hypr/scripts/wppicker.sh`: copy to the same path under `~/.config/`.
+- `local-bin/sync-caelestia-rofi.py`: copy to `~/.local/bin/`.
 
----
-
-## 5. Menjalankan Ulang Shell
-
-Untuk memuat ulang Caelestia Shell tanpa perlu logout:
+Review script dependencies and wallpaper directory settings before use. Mark the scripts executable, run the color synchronizer to generate `~/.config/rofi/colors.rasi`, and bind the picker:
 
 ```bash
-# Pastikan layar tidak dalam keadaan terkunci
-qs -c caelestia ipc call lock isLocked
+chmod +x "$HOME/.config/hypr/scripts/wppicker.sh" "$HOME/.local/bin/sync-caelestia-rofi.py"
+python3 "$HOME/.local/bin/sync-caelestia-rofi.py"
+```
 
-# Hentikan shell yang berjalan lalu jalankan fork
-killall -9 caelestia quickshell 2>/dev/null
+```lua
+hl.bind("SUPER + W", hl.dsp.exec_cmd("~/.config/hypr/scripts/wppicker.sh"))
+```
+
+## Restart and recovery
+
+The lockscreen runs inside the shell. Before stopping it, check its state and continue only if it reports `false`:
+
+```bash
+qs -c caelestia ipc call lock isLocked
+```
+
+Once unlocked, stop the existing instance and start the fork with its compiled plugin path:
+
+```bash
+qs -c caelestia kill
 env QML_IMPORT_PATH="$HOME/.local/src/caelestia-shell/build/qml" caelestia shell -d
 ```
+
+To return to the packaged shell, stop the fork while unlocked, remove only the configuration symlink, restore your previous autostart command and configuration, and run `caelestia shell -d`.
+
+## SDDM
+
+`sddm/Main.qml` is an adapted main view. It references components, widgets, and assets from the existing Caelestia SDDM theme. It is not a complete theme package and is not installed by `setup.sh`. Back up the existing theme before any manual integration.
