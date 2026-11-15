@@ -40,7 +40,7 @@ Tepi dan kilau hanya bisa dibuat sekali untuk semua di shader itu, jadi dipilih 
   `cmake --build build`.
 - Aktif permanen sejak 2026-11-15: `~/.config/quickshell/caelestia` adalah symlink ke fork.
   Autostart di `~/.config/hypr/hyprland/execs.lua` menjalankan
-  `env QML_IMPORT_PATH=${HOME}/.local/src/caelestia-shell/build/qml caelestia shell -d`.
+  `env QML_IMPORT_PATH="$HOME/.local/src/caelestia-shell/build/qml" caelestia shell -d`.
 - Cadangan autostart asli: `~/.local/state/caelestia-glass/backups/20261115-133303/execs.lua`.
   Metadata aktivasi dan lokasi plugin tersimpan di `~/.local/state/caelestia-glass/activation.json`.
 - `/etc` dan `/usr` tetap memakai paket sistem; perubahan konfigurasi hanya pada user.
@@ -60,7 +60,7 @@ hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart ke
 ## Progres
 
 1. Prototipe kaca pada OSD (commit fork `5ee9f2fe`). Hasilnya: kaca buram, tepi 1.2 px terang di sudut,
-   dan kilau sudut bawah. Lihat `screenshots/05-compare-osd.png` (kiri sebelum, kanan sesudah).
+   dan kilau sudut bawah.
    Batasan: bayangan `MultiEffect` tertumpuk di bawah kaca, jadi alpha terukur 0.44 (target 0.38), dan ada
    pita gelap di dekat bingkai.
 
@@ -71,7 +71,7 @@ hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart ke
    penumpukan transparansi. Kompensasi alpha untuk bayangan lama dihapus.
    Render PNG terisolasi mengukur tint bagian atas OSD sebesar 97/255 (sekitar 0.38);
    tepi dan kilau bawah memang menambah alpha. Bayangan dibatasi 15 px atau padding smoothing
-   bila lebih kecil. Lihat `screenshots/07-outer-shadow-osd.png` untuk hasil di desktop.
+   bila lebih kecil.
    Pada langkah ini bingkai dan bar masih memakai material awal; perubahan keduanya dilanjutkan di langkah 2.
 
    Verifikasi: build plugin/shader berhasil; tes render `tests/tst_blobshadow.qml` di fork lulus
@@ -101,7 +101,6 @@ hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart ke
    Build berhasil dan seluruh tes render lulus (7 hasil PASS termasuk setup/cleanup).
    Uji shell singkat berhasil membuka OSD dan launcher tanpa error pada log fork.
 
-   Crop desktop terbaru: `screenshots/08-glass-bar.png` dan `screenshots/08-glass-frame-osd.png`.
    Shell paket sudah aktif kembali; autostart belum diubah. Fullscreen belum diuji langsung.
    Berikutnya: terapkan material kaca pada panel lain.
 
@@ -124,8 +123,7 @@ hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart ke
    tertutup oleh interaksi hover pada percobaan awal dan berhasil dibuka pada percobaan berikutnya.
    Log fork tidak menunjukkan error QML/shader. Notifikasi uji ditutup setelah pengambilan gambar.
 
-   Crop hasil tanpa riwayat notifikasi pribadi: `screenshots/09-glass-utilities.png` dan
-   `screenshots/09-glass-notification.png`. Shell paket sudah aktif kembali; autostart belum diubah.
+   Shell paket sudah aktif kembali; autostart belum diubah.
    Fullscreen dan seluruh variasi popout belum diuji langsung. Editor Nexus terpisah, lockscreen,
    serta toast tetap memakai materialnya sendiri.
 
@@ -162,9 +160,7 @@ hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart ke
    pertemuan beberapa panel, posisi pecahan, kilau pada latar hitam, serta 81 frame buka/tutup pada
    latar hitam dan 81 pada latar putih. Backend terbaru sudah aktif pada desktop.
 
-   Visual: `screenshots/11-unified-animation.webp` memperlihatkan sambungan saat transisi;
-   `screenshots/12-soft-white-reflection.png` memperlihatkan kilau akhir pada render hitam.
-   Profiling hardware dan batas hasil dicatat di [laporan performa](reports/performance-2026-11-15.md).
+   Profiling hardware dan batas hasil dicatat di [laporan performa](../reports/performance-2026-11-15.md).
    Popup dan multi-panel sekitar 60 FPS; pergantian launcher/dashboard berulang 57.45 FPS dengan
    lonjakan interval hingga 130.43 ms. GPU grafis proses shell sekitar 5.1–11.6% pada skenario aktif.
    Optimasi tile belum diperlukan berdasarkan pengukuran ini; sumber lonjakan launcher/dashboard
@@ -187,7 +183,6 @@ hapus hanya symlink `~/.config/quickshell/caelestia`, ubah perintah autostart ke
      dengan `glass-hi` serta garis aksen `@primary`.
    - Dialog kategori (`caelestia-menu.rasi`): menu kategori ringkas 440px berlatar kaca dan border melengkung 32px.
 
-   Visual: `screenshots/15-rofi-grid.png` (grid wallpaper kaca) dan `screenshots/16-rofi-category.png` (dialog kategori).
 
 
 8. Penyempurnaan Shell QML fork & SDDM (`31463924` pada fork).

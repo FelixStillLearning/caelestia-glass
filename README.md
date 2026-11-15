@@ -20,22 +20,6 @@
 
 ---
 
-## Galeri Tangkapan Layar
-
-| Rofi Wallpaper Picker (Super+W) | Menu Kategori Kaca |
-| :---: | :---: |
-| ![Wallpaper Picker](screenshots/15-rofi-grid.png) | ![Kategori Menu](screenshots/16-rofi-category.png) |
-
-| Utilities & Quick Settings | Notification Center |
-| :---: | :---: |
-| ![Utilities](screenshots/09-glass-utilities.png) | ![Notification](screenshots/09-glass-notification.png) |
-
-| Lockscreen Kaca Cair | OSD & Bingkai Layar |
-| :---: | :---: |
-| ![Lock Screen](screenshots/12-lock-live.png) | ![OSD Glass](screenshots/08-glass-frame-osd.png) |
-
----
-
 ## Fitur Utama
 
 1. **Shader Kaca Terpadu (SDF C++ Plugin)**
