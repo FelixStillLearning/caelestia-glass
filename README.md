@@ -34,6 +34,14 @@ The helper builds an existing fork checkout and links it into the Quickshell con
 
 The development environment used Hyprland 0.57, Qt 6.12, CMake, Ninja, a C++ compiler, Rofi, FFmpeg, Python, and Pillow. Fonts used include SF Pro and Material Symbols Rounded; obtain fonts separately under their respective licenses.
 
+## Preview
+
+These Rofi theme previews were captured on an isolated workspace using demonstration entries and a controlled artwork background. They contain no private notifications or application windows.
+
+![Wallpaper picker theme with demonstration entries](docs/images/wallpaper-preview.png)
+
+![Desktop settings menu theme with demonstration entries](docs/images/menu-preview.png)
+
 ## Implementation and validation
 
 - A unified renderer avoids overlapping tint and gaps where glass panels meet.
@@ -47,7 +55,7 @@ See the [development log](docs/DEVELOPMENT_LOG.md) for implementation details an
 
 ## Screenshots and privacy
 
-Local desktop captures have been removed because they contained private notifications and application content. The `screenshots/` directory is ignored by Git. Only publish new images after reviewing all visible content, including content behind transparent panels.
+Original local desktop captures have been removed because they contained private notifications and application content. Only the reviewed demonstration previews above are included. The `screenshots/` directory is ignored by Git. Only publish new images after reviewing all visible content, including content behind transparent panels.
 
 ## License and attribution
 
