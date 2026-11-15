@@ -83,6 +83,16 @@ The [performance report](../reports/performance-2026-11-15.md) records the metho
 
 The measurement did not establish a need for tile optimization. The cause of launcher/dashboard frame interval spikes remains unisolated. Temporary measurement probes stayed outside the production fork.
 
+## Glass lighting update
+
+The shared shader now uses the design reference's horizontal rim profile, with peaks of 0.55 and 0.40. A lower-surface gradient reaches white opacity 0.07, while two localized lower-corner highlights use opacity 0.13 and 0.09 with a 46 px radius. Panel coordinates follow the existing deformation matrix. Frame lighting remains contour based because its geometry surrounds the screen rather than forming a solid panel.
+
+Lighting is composited once over the shared surface. Highlights from corners buried inside another surface are suppressed, and material contributions are normalized to avoid stacking at panel intersections. Disabling glass retains the original material.
+
+The new render tests reproduce the missing bottom glow, corner highlights, and rim contrast with the previous shader, then pass with the updated shader. The full render suite passes: 20 test cases, or 30 PASS results including setup and cleanup. Qt Wayland text-input focus warnings appear between test windows; no test fails. The plugin was rebuilt and loaded into the active shell while unlocked.
+
+New documentation previews show the actual bar/frame, OSD, and utilities on an isolated workspace with a demonstration image viewer. Notifications were suppressed temporarily, and the original workspace and notification setting were restored after capture. The earlier performance measurements predate this lighting update; performance has not been measured again.
+
 ## Public assets and privacy
 
 Local desktop captures were removed from the project and its rewritten Git history because they exposed private notifications and application content. The screenshot directory is ignored. Any future showcase images must be reviewed in full, including backgrounds visible through transparent surfaces.

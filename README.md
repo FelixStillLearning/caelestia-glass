@@ -6,7 +6,7 @@ A community-maintained glass variant of [Caelestia Shell](https://github.com/cae
 
 ## Overview
 
-The shell fork applies a translucent material to the screen frame, bar, drawers, popouts, and OSD. A shared signed distance field (SDF) renderer draws connected surfaces with a soft white rim and directional sheen. Colors follow the active Caelestia wallpaper palette.
+The shell fork applies a translucent material to the screen frame, bar, drawers, popouts, and OSD. A shared signed distance field (SDF) renderer draws connected surfaces with a variable white rim, lower-surface glow, and localized corner highlights. Colors follow the active Caelestia wallpaper palette.
 
 The project also includes an SDDM main view and references to matching Rofi wallpaper picker configuration. The current glass material is experimental and still needs visual refinement.
 
@@ -36,7 +36,13 @@ The development environment used Hyprland 0.57, Qt 6.12, CMake, Ninja, a C++ com
 
 ## Preview
 
-These Rofi theme previews were captured on an isolated workspace using demonstration entries and a controlled artwork background. They contain no private notifications or application windows.
+All previews were captured on an isolated workspace with notifications suppressed and a controlled artwork background. Shell previews show the updated glass material over a demonstration image viewer; Rofi previews use demonstration entries. No private notifications, account panels, or application content are shown.
+
+![Shell frame and bar with a demonstration background](docs/images/shell-desktop-preview.png)
+
+| OSD | Utilities |
+| --- | --- |
+| ![Glass OSD](docs/images/shell-osd-preview.png) | ![Glass utilities panel](docs/images/shell-utilities-preview.png) |
 
 ![Wallpaper picker theme with demonstration entries](docs/images/wallpaper-preview.png)
 
