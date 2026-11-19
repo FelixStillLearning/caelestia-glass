@@ -63,10 +63,6 @@ A short measurement on one device reached approximately 60 FPS for popup and mul
 
 See the [development log](docs/DEVELOPMENT_LOG.md) for implementation details and validation limits.
 
-## Screenshots and privacy
-
-Original local desktop captures have been removed because they contained private notifications and application content. Only the reviewed demonstration previews above are included. The `screenshots/` directory is ignored by Git. Only publish new images after reviewing all visible content, including content behind transparent panels.
-
 ## License and attribution
 
 Licensed under [GNU GPL v3.0](LICENSE). Based on Caelestia Shell by the Caelestia team.
